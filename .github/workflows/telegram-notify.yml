@@ -41,6 +41,8 @@ jobs:
           WORKFLOW_NAME: ${{ github.workflow }}
           RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -u
+
           TEXT="GitHub 通知
           项目：${PROJECT_NAME:-$REPOSITORY}
           仓库：$REPOSITORY
@@ -56,8 +58,23 @@ jobs:
           TEXT="$TEXT
           查看运行：$RUN_URL"
 
-          curl --fail --silent --show-error \
+          RESPONSE_FILE="$(mktemp)"
+          HTTP_CODE="$(curl --silent --show-error \
+            --output "$RESPONSE_FILE" \
+            --write-out "%{http_code}" \
             --request POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=${TEXT}"
+            --data-urlencode "text=${TEXT}")"
+
+          echo "Telegram API HTTP status: ${HTTP_CODE}"
+          echo "Telegram API response:"
+          cat "$RESPONSE_FILE"
+          echo
+
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Telegram notification failed. Check the API description above."
+            exit 1
+          fi
+
+          echo "Telegram notification sent successfully."
