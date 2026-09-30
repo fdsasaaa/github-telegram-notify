@@ -1,0 +1,15 @@
+name: Test Telegram Notification
+
+on:
+  workflow_dispatch:
+
+jobs:
+  telegram-test:
+    uses: fdsasaaa/github-telegram-notify/.github/workflows/telegram-notify.yml@main
+    with:
+      project_name: "GitHub Telegram Notify"
+      status: "测试成功"
+      message: "GitHub Actions 已成功调用中央 Telegram reusable workflow。"
+    secrets:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
